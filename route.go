@@ -1,4 +1,4 @@
-package router
+package gorouter
 
 import (
 	"net/url"
