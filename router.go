@@ -1,21 +1,22 @@
 package trails
 
 import (
+	"context"
+	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
 type Router struct {
-	routes      *route // Tree of route nodes
-	rootHandler Handle
+	routes   *route // Tree of route nodes
+	NotFound Handle
 }
 
-type Handle func(http.ResponseWriter, *http.Request, url.Values)
+type Handle func(http.ResponseWriter, *http.Request)
 
-func New(rootHandler Handle) *Router {
+func New() *Router {
 	rootRoute := route{match: "/", isParam: false, methods: make(map[string]Handle)}
-	return &Router{routes: &rootRoute, rootHandler: rootHandler}
+	return &Router{routes: &rootRoute}
 }
 
 func (r *Router) Handle(method, path string, handler Handle) {
@@ -26,15 +27,32 @@ func (r *Router) Handle(method, path string, handler Handle) {
 }
 
 func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	// Get the params from the URL Query
-	req.ParseForm()
-	params := req.Form
+	// Split the URL into parts
+	parts := strings.Split(req.URL.Path, "/")
+	length := len(parts)
 
-	route, _ := router.routes.traverse(strings.Split(req.URL.Path, "/")[1:], params)
+	// Remove first empty string from the split and optionaly the last one
+	if length > 2 && parts[length-1] == "" {
+		parts = parts[1 : length-1]
+	} else {
+		parts = parts[1:]
+	}
+
+	fmt.Println(parts)
+	route, matched := router.routes.traverse(parts)
+
+	if route.isParam {
+		ctx := context.WithValue(req.Context(), route.match[1:], matched)
+		req = req.WithContext(ctx)
+	}
 
 	if handler := route.methods[req.Method]; handler != nil {
-		handler(w, req, params)
-	} else {
-		router.rootHandler(w, req, params)
+		handler(w, req)
+	} else if router.NotFound != nil {
+		router.NotFound(w, req)
 	}
+}
+
+func Param(ctx context.Context, param string) string {
+	return ctx.Value(param).(string)
 }

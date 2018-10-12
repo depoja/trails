@@ -1,7 +1,6 @@
 package trails
 
 import (
-	"net/url"
 	"strings"
 )
 
@@ -19,12 +18,12 @@ type route struct {
 }
 
 func (r *route) addNode(method, path string, handler Handle) {
-	// Split the URL path into matches
-	matches := strings.Split(path, "/")[1:]
-	count := len(matches)
+	// Split the URL path into parts
+	parts := strings.Split(path, "/")[1:]
+	count := len(parts)
 
 	for {
-		node, match := r.traverse(matches, nil)
+		node, match := r.traverse(parts)
 
 		if node.match == match && count == 1 {
 			node.methods[method] = handler
@@ -50,9 +49,9 @@ func (r *route) addNode(method, path string, handler Handle) {
 	}
 }
 
-func (r *route) traverse(matches []string, params url.Values) (*route, string) {
+func (r *route) traverse(parts []string) (*route, string) {
 	// Get the first match
-	matched := matches[0]
+	match := parts[0]
 
 	// If there are child routes
 	if len(r.children) > 0 {
@@ -61,22 +60,15 @@ func (r *route) traverse(matches []string, params url.Values) (*route, string) {
 		for _, child := range r.children {
 
 			// If the child matches or it is a param route
-			if matched == child.match || child.isParam {
+			if match == child.match || child.isParam {
 
-				// If a param route add the matched part to the params map
-				if params != nil && child.isParam {
-					params.Add(child.match[1:], matched)
+				// If there are remaining parts traverse recursively
+				if rem := parts[1:]; len(rem) > 0 {
+					return child.traverse(rem)
 				}
-
-				// Advance
-				next := matches[1:]
-
-				if len(next) > 0 {
-					return child.traverse(next, params)
-				}
-				return child, matched
+				return child, match
 			}
 		}
 	}
-	return r, matched
+	return r, match
 }
