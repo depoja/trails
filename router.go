@@ -2,7 +2,6 @@ package trails
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -38,7 +37,6 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		parts = parts[1:]
 	}
 
-	fmt.Println(parts)
 	route, matched := router.routes.traverse(parts)
 
 	if route.isParam {
