@@ -1,4 +1,4 @@
-package gorouter
+package trails
 
 import (
 	"net/http"
