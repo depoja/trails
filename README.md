@@ -1,14 +1,16 @@
 # Trails
+
 A Simple HTTP router implementation in Go
 
-* Fast
-* Zero dependencies
-* Few lines of code
-* HTTP Method support
-* Path Paramenter support
-* Uses [Context](https://golang.org/pkg/net/http/#Request.Context) to pass in parameters
+- Fast
+- Zero dependencies
+- Few lines of code
+- HTTP Method support
+- Path Paramenter support
+- Uses [Context](https://golang.org/pkg/net/http/#Request.Context) to pass in parameters
 
 ## Installation
+
 Just copy the contents into your project or use `go get`:
 
 ```
@@ -17,10 +19,10 @@ go get github.com/klintmane/trails
 
 ## Usage
 
-* Create a new `Router` with `New`
-* Add handlers with `Handle`
-* Specify the Method, Path and Handler for each route
-* Use `Param` to get the parameters
+- Create a new `Router` with `New`
+- Add handlers with `Handle`
+- Specify the Method, Path and Handler for each route
+- Use `Param` to get the parameters from the request
 
 ```go
 func main() {
@@ -34,8 +36,8 @@ func main() {
 }
 
 func handleReadProduct(w http.ResponseWriter, r *http.Request) {
-	category := trails.Param("category")
-	product := trails.Param("product")
+	category := trails.Param(r, "category")
+	product := trails.Param(r, "product")
 	// ...
 }
 ```

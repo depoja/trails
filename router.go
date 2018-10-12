@@ -51,6 +51,6 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func Param(ctx context.Context, param string) string {
-	return ctx.Value(param).(string)
+func Param(r *http.Request, param string) string {
+	return r.Context().Value(param).(string)
 }
