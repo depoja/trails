@@ -1,6 +1,6 @@
 # Trails
 
-A Simple HTTP router implementation in Go
+A simple, context-based HTTP router implementation in Go
 
 - Fast
 - Zero dependencies
