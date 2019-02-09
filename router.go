@@ -1,7 +1,6 @@
 package trails
 
 import (
-	"context"
 	"net/http"
 	"strings"
 )
@@ -37,12 +36,8 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		parts = parts[1:]
 	}
 
-	route, matched := router.routes.traverse(parts)
-
-	if route.isParam {
-		ctx := context.WithValue(req.Context(), route.match[1:], matched)
-		req = req.WithContext(ctx)
-	}
+	route, _, ctx := router.routes.traverse(parts, req.Context())
+	req = req.WithContext(ctx)
 
 	if handler := route.methods[req.Method]; handler != nil {
 		handler(w, req)
@@ -52,5 +47,9 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func Param(r *http.Request, param string) string {
-	return r.Context().Value(param).(string)
+	p, ok := r.Context().Value(param).(string)
+	if !ok {
+		return ""
+	}
+	return p
 }

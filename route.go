@@ -1,6 +1,8 @@
 package trails
 
 import (
+	"context"
+	"regexp"
 	"strings"
 )
 
@@ -23,7 +25,7 @@ func (r *route) addNode(method, path string, handler Handle) {
 	count := len(parts)
 
 	for {
-		node, match := r.traverse(parts)
+		node, match, _ := r.traverse(parts, nil)
 
 		if node.match == match && count == 1 {
 			node.methods[method] = handler
@@ -49,7 +51,16 @@ func (r *route) addNode(method, path string, handler Handle) {
 	}
 }
 
-func (r *route) traverse(parts []string) (*route, string) {
+func parseParam(param string, target string) (bool, string) {
+	parts := strings.Split(param, ":")
+	if len(parts) != 3 {
+		return true, parts[1]
+	}
+	result, _ := regexp.MatchString(parts[2], target)
+	return result, parts[1]
+}
+
+func (r *route) traverse(parts []string, ctx context.Context) (*route, string, context.Context) {
 	// Get the first match
 	match := parts[0]
 
@@ -59,16 +70,25 @@ func (r *route) traverse(parts []string) (*route, string) {
 		// Iterate over each child
 		for _, child := range r.children {
 
-			// If the child matches or it is a param route
-			if match == child.match || child.isParam {
+			// If route matches directly make valid
+			valid := match == child.match
 
+			// If param route we need to first check its validity
+			if child.isParam && ctx != nil {
+				param := child.match
+				valid, param = parseParam(param, match)
+				ctx = context.WithValue(ctx, param, match)
+			}
+
+			if valid {
 				// If there are remaining parts traverse recursively
 				if rem := parts[1:]; len(rem) > 0 {
-					return child.traverse(rem)
+					return child.traverse(rem, ctx)
 				}
-				return child, match
+				return child, match, ctx
 			}
+
 		}
 	}
-	return r, match
+	return r, match, ctx
 }

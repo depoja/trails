@@ -7,6 +7,7 @@ A simple, context-based HTTP router implementation in Go
 - Few lines of code
 - HTTP Method support
 - Path Paramenter support
+- Regex Paths
 - Uses [Context](https://golang.org/pkg/net/http/#Request.Context) to pass in parameters
 
 ## Installation
@@ -25,19 +26,25 @@ go get github.com/klintmane/trails
 - Use `Param` to get the parameters from the request
 
 ```go
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/klintmane/trails"
+)
+
 func main() {
 	router := trails.New()
 
-	router.Handle("GET", "/store/:category/:product", handleReadProduct)
-	router.Handle("PUT", "/store/:category/:product", handleUpdateProduct)
-	router.Handle("DELETE", "/store/:category/:product", handleDeleteProduct)
+	router.Handle("GET", "/store/:category", getCategory)
+	router.Handle("GET", "/store/:category/:product:[0-9]+", getProduct)
 
 	http.ListenAndServe(":8080", router)
 }
 
-func handleReadProduct(w http.ResponseWriter, r *http.Request) {
+func getProduct(w http.ResponseWriter, r *http.Request) {
 	category := trails.Param(r, "category")
-	product := trails.Param(r, "product")
+	productId := trails.Param(r, "product")
 	// ...
 }
 ```
