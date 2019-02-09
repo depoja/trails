@@ -2,6 +2,7 @@ package trails
 
 import (
 	"context"
+	"net/http"
 	"regexp"
 	"strings"
 )
@@ -16,10 +17,10 @@ type route struct {
 	children []*route
 	match    string
 	isParam  bool
-	methods  map[string]Handle
+	methods  map[string]http.HandlerFunc
 }
 
-func (r *route) addNode(method, path string, handler Handle) {
+func (r *route) addNode(method, path string, handler http.HandlerFunc) {
 	// Split the URL path into parts
 	parts := strings.Split(path, "/")[1:]
 	count := len(parts)
@@ -32,7 +33,7 @@ func (r *route) addNode(method, path string, handler Handle) {
 			return
 		}
 
-		newNode := route{match: match, isParam: false, methods: make(map[string]Handle)}
+		newNode := route{match: match, isParam: false, methods: make(map[string]http.HandlerFunc)}
 
 		if len(match) > 0 && match[0] == ':' {
 			newNode.isParam = true

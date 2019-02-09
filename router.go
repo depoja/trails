@@ -7,18 +7,16 @@ import (
 
 type Router struct {
 	routes    *route // Tree of route nodes
-	wildcards map[string]Handle
-	NotFound  Handle
+	wildcards map[string]http.HandlerFunc
+	NotFound  http.HandlerFunc
 }
-
-type Handle func(http.ResponseWriter, *http.Request)
 
 func New() *Router {
-	rootRoute := route{match: "/", isParam: false, methods: make(map[string]Handle)}
-	return &Router{routes: &rootRoute, wildcards: make(map[string]Handle)}
+	rootRoute := route{match: "/", isParam: false, methods: make(map[string]http.HandlerFunc)}
+	return &Router{routes: &rootRoute, wildcards: make(map[string]http.HandlerFunc)}
 }
 
-func (r *Router) Handle(method, path string, handler Handle) {
+func (r *Router) Handle(method, path string, handler http.HandlerFunc) {
 	if path == "*" {
 		r.wildcards[method] = handler
 		return
