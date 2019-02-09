@@ -6,18 +6,23 @@ import (
 )
 
 type Router struct {
-	routes   *route // Tree of route nodes
-	NotFound Handle
+	routes    *route // Tree of route nodes
+	wildcards map[string]Handle
+	NotFound  Handle
 }
 
 type Handle func(http.ResponseWriter, *http.Request)
 
 func New() *Router {
 	rootRoute := route{match: "/", isParam: false, methods: make(map[string]Handle)}
-	return &Router{routes: &rootRoute}
+	return &Router{routes: &rootRoute, wildcards: make(map[string]Handle)}
 }
 
 func (r *Router) Handle(method, path string, handler Handle) {
+	if path == "*" {
+		r.wildcards[method] = handler
+		return
+	}
 	if path[0] != '/' {
 		panic("Path has to start with a /.")
 	}
@@ -40,6 +45,8 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	req = req.WithContext(ctx)
 
 	if handler := route.methods[req.Method]; handler != nil {
+		handler(w, req)
+	} else if handler := router.wildcards[req.Method]; handler != nil {
 		handler(w, req)
 	} else if router.NotFound != nil {
 		router.NotFound(w, req)

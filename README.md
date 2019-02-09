@@ -8,6 +8,7 @@ A simple, context-based HTTP router implementation in Go
 - HTTP Method support
 - Path Paramenter support
 - Regex Paths
+- Wildcard support (only top-level at the moment)
 - Uses [Context](https://golang.org/pkg/net/http/#Request.Context) to pass in parameters
 
 ## Installation
@@ -26,6 +27,8 @@ go get github.com/klintmane/trails
 - Use `Param` to get the parameters from the request
 
 ```go
+package main
+
 import (
 	"fmt"
 	"net/http"
@@ -36,8 +39,8 @@ import (
 func main() {
 	router := trails.New()
 
-	router.Handle("GET", "/store/:category", getCategory)
 	router.Handle("GET", "/store/:category/:product:[0-9]+", getProduct)
+	router.Handle("GET", "*", getAll)
 
 	http.ListenAndServe(":8080", router)
 }
@@ -45,7 +48,11 @@ func main() {
 func getProduct(w http.ResponseWriter, r *http.Request) {
 	category := trails.Param(r, "category")
 	productId := trails.Param(r, "product")
-	// ...
+	w.Write([]byte(fmt.Sprintf("Category: %s, Product: %s", category, productId)))
+}
+
+func getAll(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Catch all gets"))
 }
 ```
 
